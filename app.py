@@ -26,3 +26,11 @@ def run(payload: Dict[str, Any]) -> Dict[str, Any]:
         return aba.export_results(args, atks)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.get("/")
+def home():
+    return {
+        "message": "ABA Generator API is running.",
+        "try": ["/health", "/docs", "POST /run"]
+    }
