@@ -1,9 +1,13 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from typing import Dict, Any
 from aba import ABA
 
 app = FastAPI(title="ABA Generator API", version="1.0.0")
+
+app.mount("/web", StaticFiles(directory="web"), name="web")
 
 app.add_middleware(
     CORSMiddleware,
@@ -35,3 +39,7 @@ def home():
         "message": "ABA Generator API is running.",
         "try": ["/health", "/docs", "POST /run"]
     }
+
+@app.get("/")
+def serve_index():
+    return FileResponse("web/index.html")
