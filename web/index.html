@@ -1,210 +1,113 @@
 <!doctype html>
 <html lang="fr">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>ABA Generator – UI</title>
-  <style>
-    :root { --bg:#0b1020; --card:#111832; --muted:#98a2b3; --text:#e7ecf0; --accent:#7c9cff; --ok:#22c55e; --warn:#eab308; --err:#ef4444; }
-    * { box-sizing: border-box; }
-    body { margin:0; background:linear-gradient(180deg,#0b1020,#0a0f1a); color:var(--text); font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto; }
-    header { padding:20px; border-bottom:1px solid #1e293b; position:sticky; top:0; background:#0b1020dd; backdrop-filter: blur(6px); }
-    h1 { margin:0; font-size:20px; }
-    .container { max-width:1100px; margin: 24px auto; padding: 0 16px; }
-    .grid { display:grid; grid-template-columns: 1fr 1fr; gap:16px; }
-    .card { background:var(--card); border:1px solid #1e293b; border-radius:14px; box-shadow: 0 10px 30px rgba(0,0,0,.25); }
-    .card h2 { font-size:16px; margin:0; padding:12px 14px; border-bottom:1px solid #1e293b; color:#cbd5e1; }
-    textarea, pre, input[type="text"] { width:100%; border:1px solid #263046; background:#0c132a; color:var(--text); border-radius:12px; padding:12px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:14px; }
-    textarea { min-height: 220px; resize: vertical; }
-    pre { white-space: pre-wrap; word-break: break-word; min-height: 220px; }
-    .row { display:flex; gap:10px; align-items:center; flex-wrap: wrap; }
-    button { background:var(--accent); color:#0b1020; border:none; padding:10px 14px; border-radius:12px; font-weight:600; cursor:pointer; }
-    button.secondary { background:#0c132a; color:#cbd5e1; border:1px solid #263046; }
-    .pill { font-size:12px; padding:4px 8px; border-radius:10px; background:#0c132a; border:1px solid #263046; color:#cbd5e1; }
-    .list { padding:12px; }
-    table { width:100%; border-collapse: collapse; font-size:14px; }
-    th, td { padding:8px 10px; border-bottom: 1px solid #1e293b; }
-    th { text-align:left; color:#cbd5e1; }
-    .muted { color: var(--muted); }
-    .ok { color: var(--ok); }
-    .warn { color: var(--warn); }
-    .err { color: var(--err); }
-    footer { text-align:center; color:#64748b; font-size:12px; padding:24px 0; }
-    @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
-  </style>
+  <meta charset="utf-8">
+  <title>ABA UI</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header class="container">
-    <h1>ABA Generator – Interface</h1>
-    <div class="row" style="margin-top:10px">
-      <span class="pill">Backend: <span id="api-url">...</span></span>
-      <a class="pill" href="#" id="open-docs" target="_blank" rel="noopener">/docs</a>
-      <span class="pill">Statut: <span id="health" class="muted">...</span></span>
-    </div>
-  </header>
+<main>
+  <h1>ABA Generator</h1>
+  <p class="small">
+    Backend: <code id="api"></code> —
+    <a id="docs" target="_blank" rel="noopener">/docs</a> —
+    Statut: <span id="health">...</span>
+  </p>
 
-  <main class="container">
-    <div class="grid">
-      <!-- INPUT -->
-      <section class="card">
-        <h2>Entrée JSON</h2>
-        <div style="padding:12px;">
-          <textarea id="inp"></textarea>
-          <div class="row" style="margin-top:10px">
-            <button onclick="runABA()">Run</button>
-            <button class="secondary" onclick="loadSample()">Charger l'exemple</button>
-            <button class="secondary" onclick="formatJSON()">Formater</button>
-          </div>
-          <p class="muted" style="margin-top:8px">Colle le JSON du framework (literals, assumptions, contraries, rules, preferences), puis clique “Run”.</p>
-        </div>
-      </section>
+  <!-- FORMULAIRE -->
+  <section class="card">
+    <h3 class="section-title">Données du framework</h3>
 
-      <!-- OUTPUT -->
-      <section class="card">
-        <h2>Résultat brut</h2>
-        <div style="padding:12px;">
-          <pre id="out">Résultats ici...</pre>
-        </div>
-      </section>
+    <!-- L -->
+    <div class="field">
+      <div class="label-row">
+        <label for="literals">L (littéraux)</label>
+        <span class="hint">ex : a,b,c,q,p,r,s,t</span>
+      </div>
+      <input type="text" id="literals" placeholder="a,b,c,q,p,r,s,t">
     </div>
 
-    <section class="card" style="margin-top:16px;">
-      <h2>Résumé lisible</h2>
-      <div class="list" id="summary">
-        <p class="muted">Lance un run pour voir le résumé (arguments et attaques).</p>
+    <!-- A -->
+    <div class="field">
+      <div class="label-row">
+        <label for="assumptions">A (hypothèses)</label>
+        <span class="hint">ex : a,b,c</span>
       </div>
-    </section>
-  </main>
-
-  <footer>
-    © ABA Generator — FastAPI + Front minimal
-  </footer>
-
-<script>
-/** CONFIG: mets ici l’URL de ton API Render */
-const API_BASE = "https://aba-app-bj37.onrender.com"; // ← remplace si besoin
-
-document.getElementById('api-url').textContent = API_BASE;
-document.getElementById('open-docs').href = API_BASE + "/docs";
-
-/** Health check au chargement */
-window.addEventListener('load', async () => {
-  try {
-    const r = await fetch(API_BASE + "/health");
-    const ok = r.ok;
-    document.getElementById('health').textContent = ok ? "OK" : "HS";
-    document.getElementById('health').className = ok ? "ok" : "err";
-    loadSample();
-  } catch (e) {
-    document.getElementById('health').textContent = "HS";
-    document.getElementById('health').className = "err";
-  }
-});
-
-/** Exemple prêt à l’emploi */
-function loadSample(){
-  const sample = {
-    "literals": ["a","b","c","q","p","r","s","t"],
-    "assumptions": ["a","b","c"],
-    "contraries": {"a":"r","b":"s","c":"t"},
-    "rules": [
-      {"head":"p","body":["q","a"]},
-      {"head":"q","body":[]},
-      {"head":"r","body":["b","c"]},
-      {"head":"t","body":["p","c"]},
-      {"head":"s","body":["t"]}
-    ],
-    "preferences": {"a":2,"b":1}
-  };
-  document.getElementById('inp').value = JSON.stringify(sample, null, 2);
-}
-
-/** Formater le JSON */
-function formatJSON(){
-  const t = document.getElementById('inp');
-  try { t.value = JSON.stringify(JSON.parse(t.value), null, 2); }
-  catch(e){ alert("JSON invalide : " + e.message); }
-}
-
-/** Lancer l’appel au backend */
-async function runABA(){
-  const out = document.getElementById('out');
-  const summary = document.getElementById('summary');
-  out.textContent = "Calcul en cours...";
-  summary.innerHTML = '<p class="muted">Calcul en cours...</p>';
-
-  let payload;
-  try { payload = JSON.parse(document.getElementById('inp').value); }
-  catch(e){ out.textContent = "JSON invalide : " + e.message; return; }
-
-  try {
-    const res = await fetch(API_BASE + "/run", {
-      method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify(payload)
-    });
-    const data = await res.json();
-    if(!res.ok){
-      out.textContent = "Erreur: " + (data.detail || res.statusText);
-      summary.innerHTML = '<p class="err">Erreur: ' + (data.detail || res.statusText) + '</p>';
-      return;
-    }
-    out.textContent = JSON.stringify(data, null, 2);
-    renderSummary(data);
-  } catch (e) {
-    out.textContent = "Erreur réseau : " + e.message;
-    summary.innerHTML = '<p class="err">Erreur réseau : ' + e.message + '</p>';
-  }
-}
-
-/** Affichage lisible */
-function renderSummary(data){
-  const root = document.getElementById('summary');
-  const args = data.arguments || [];
-  const atks = data.attacks || [];
-
-  const argRows = args.map(a => `
-    <tr>
-      <td class="muted">A${a.id}</td>
-      <td><code>${a.conclusion}</code></td>
-      <td>${(a.assumptions||[]).map(x=>`<code>${x}</code>`).join(", ") || "<span class='muted'>∅</span>"}</td>
-    </tr>
-  `).join("");
-
-    const atkRows = atks.map(x => `
-    <tr>
-        <td>${x.kind === "reverse" ? "↺ reverse" : "→ normal"}</td>
-        <td class="muted">A${x.attacker}</td>
-        <td class="muted">A${x.target}</td>
-        <td>vise <code>${x.witness}</code></td>
-    </tr>
-    `).join("");
-
-  root.innerHTML = `
-    <div style="padding:12px;">
-      <div class="row" style="gap:14px; margin-bottom:8px;">
-        <span class="pill">Arguments: ${args.length}</span>
-        <span class="pill">Attaques: ${atks.length}</span>
-      </div>
-
-      <h3 style="margin:8px 0;">Arguments</h3>
-      <div style="overflow:auto;">
-        <table>
-          <thead><tr><th>ID</th><th>Conclusion</th><th>Hypothèses</th></tr></thead>
-          <tbody>${argRows || "<tr><td colspan='3' class='muted'>Aucun argument.</td></tr>"}</tbody>
-        </table>
-      </div>
-
-      <h3 style="margin:18px 0 8px;">Attaques</h3>
-      <div style="overflow:auto;">
-        <table>
-          <thead><tr><th>Type</th><th>Attaquant</th><th>Cible</th><th>Détail</th></tr></thead>
-        <tbody>${atkRows || "<tr><td colspan='4' class='muted'>Aucune attaque.</td></tr>"}</tbody>
-        </table>
-      </div>
+      <input type="text" id="assumptions" placeholder="a,b,c">
     </div>
-  `;
-}
-</script>
+
+    <!-- Contraires -->
+    <div class="field">
+      <div class="label-row">
+        <label>Contraires C(x)</label>
+        <span class="hint">ex : C(a)=r, C(b)=s, C(c)=t</span>
+      </div>
+      <table class="grid-table contraries-table" id="contraries-table">
+        <thead><tr><th>Hypothèse</th><th>Contraire C(·)</th><th></th></tr></thead>
+        <tbody id="contraries-body"></tbody>
+      </table>
+      <button class="secondary" id="add-contrary">+ Ajouter un contraire</button>
+    </div>
+
+    <!-- Règles -->
+    <div class="field">
+      <div class="label-row">
+        <label>Règles</label>
+        <span class="hint">ex : <code>p &lt;- q,a</code> • Fait : <code>q &lt;-</code> (body vide)</span>
+      </div>
+      <table class="grid-table rules-table" id="rules-table">
+        <thead><tr><th>Head</th><th>Body (virgules)</th><th></th></tr></thead>
+        <tbody id="rules-body"></tbody>
+      </table>
+      <button class="secondary" id="add-rule">+ Ajouter une règle</button>
+    </div>
+
+    <!-- PREF -->
+    <div class="field">
+      <div class="label-row">
+        <label for="pref">PREF (texte)</label>
+        <span class="hint">ex : <code>a,b &gt; c &gt; d</code> • laisse vide si aucune préférence</span>
+      </div>
+      <input type="text" id="pref" placeholder="a > b">
+    </div>
+
+    <div class="row">
+      <button id="btn-run">Exécuter</button>
+      <button class="secondary" id="btn-sample">Charger l'exemple</button>
+      <button class="secondary" id="btn-clear">Effacer</button>
+      <span class="small" id="status-msg"></span>
+    </div>
+  </section>
+
+  <!-- APERÇU JSON (optionnel) -->
+  <section class="card">
+    <div class="row between">
+      <h3 class="section-title">Aperçu du JSON envoyé</h3>
+      <button class="secondary" id="btn-toggle-preview">Afficher</button>
+    </div>
+    <div id="preview-section" class="hidden">
+      <pre id="preview">—</pre>
+    </div>
+  </section>
+
+  <!-- RÉSULTAT BACKEND (optionnel) -->
+  <section class="card">
+    <div class="row between">
+      <h3 class="section-title">Résultat (backend)</h3>
+      <button class="secondary" id="btn-toggle-result">Afficher</button>
+    </div>
+    <div id="result-section" class="hidden">
+      <pre id="out">Résultats ici…</pre>
+    </div>
+  </section>
+
+  <!-- RÉSUMÉ LISIBLE -->
+  <section class="card">
+    <h3 class="section-title">Résumé</h3>
+    <div id="summary"><span class="small">Lance un run pour voir les arguments et attaques.</span></div>
+  </section>
+</main>
+
+<script src="script.js"></script>
 </body>
 </html>
