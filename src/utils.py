@@ -1,9 +1,3 @@
-import os
-from math import sqrt
-import networkx as nx
-import matplotlib.pyplot as plt
-from matplotlib.lines import Line2D
-
 def parse_preferences(text):
     parts = str(text).split(">")
     levels = []
