@@ -1,0 +1,16 @@
+{
+  "literals": ["a", "b", "x", "y", "z"],
+  "assumptions": ["a", "b"],
+  "contraries": {
+    "a": "y",
+    "b": "x"
+  },
+  "rules": [
+    {"head": "y", "body": ["b"]},
+    {"head": "y", "body": ["y"]},
+    {"head": "x", "body": ["x"]},
+    {"head": "x", "body": ["a"]},
+    {"head": "z", "body": ["x", "y"]}
+  ],
+  "preferences": {}
+}

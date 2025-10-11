@@ -1,113 +1,106 @@
 <!doctype html>
 <html lang="fr">
 <head>
-  <meta charset="utf-8">
-  <title>ABA UI</title>
-  <link rel="stylesheet" href="/web/style.css">
+  <meta charset="utf-8" />
+  <title>ABA+ Framework</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="/web/style.css" />
 </head>
 <body>
-<main>
-  <h1>ABA Generator</h1>
-  <p class="small">
-    Backend: <code id="api"></code> —
-    <a id="docs" target="_blank" rel="noopener">/docs</a> —
-    Statut: <span id="health">...</span>
-  </p>
+  <header class="topbar">
+    <h1 class="title">ABA+ Framework</h1>
+    <p class="subtitle">Enjoy your experience</p>
+  </header>
 
-  <!-- FORMULAIRE -->
-  <section class="card">
-    <h3 class="section-title">Données du framework</h3>
-
-    <!-- L -->
-    <div class="field">
-      <div class="label-row">
-        <label for="literals">L (littéraux)</label>
-        <span class="hint">ex : a,b,c,q,p,r,s,t</span>
+  <main class="container">
+    <section class="panel">
+      <div class="panel-header">
+        <h2>Entrée (texte ou JSON)</h2>
+        <div class="actions">
+          <input type="file" id="fileInput" accept=".json,.txt" />
+          <button id="btnLoadExample" class="secondary">Charger l'exemple</button>
+        </div>
       </div>
-      <input type="text" id="literals" placeholder="a,b,c,q,p,r,s,t">
-    </div>
 
-    <!-- A -->
-    <div class="field">
-      <div class="label-row">
-        <label for="assumptions">A (hypothèses)</label>
-        <span class="hint">ex : a,b,c</span>
+      <textarea id="inputJson" spellcheck="false" placeholder="Colle ici soit :
+- le format texte :
+L: [a,b,c,q,p,r,s,t]
+A: [a,b,c]
+C(a): r
+C(b): s
+C(c): t
+[r1]: p <- q,a
+[r2]: q <-
+[r3]: r <- b,c
+[r4]: t <- p,c
+[r5]: s <- t
+PREF: a > b
+
+- OU le JSON équivalent."></textarea>
+
+      <div class="row">
+        <label class="chk"><input type="checkbox" id="optNonCirc" /> Non-circulaire</label>
+        <label class="chk"><input type="checkbox" id="optAtomic" /> Atomic</label>
+        <label class="chk"><input type="checkbox" id="optPrefs" checked /> Préférences (ABA+)</label>
+        <div class="spacer"></div>
+        <button id="btnCalc" class="primary">Calculer</button>
       </div>
-      <input type="text" id="assumptions" placeholder="a,b,c">
-    </div>
 
-    <!-- Contraires -->
-    <div class="field">
-      <div class="label-row">
-        <label>Contraires C(x)</label>
-        <span class="hint">ex : C(a)=r, C(b)=s, C(c)=t</span>
+      <div id="status"></div>
+    </section>
+
+    <!-- Rangée 1 : résumé  -->
+    <section class="grid grid-1">
+      <div class="card">
+        <h3>Résumé du cadre</h3>
+        <div id="summary"></div>
       </div>
-      <table class="grid-table contraries-table" id="contraries-table">
-        <thead><tr><th>Hypothèse</th><th>Contraire C(·)</th><th></th></tr></thead>
-        <tbody id="contraries-body"></tbody>
-      </table>
-      <button class="secondary" id="add-contrary">+ Ajouter un contraire</button>
-    </div>
+    </section>
 
-    <!-- Règles -->
-    <div class="field">
-      <div class="label-row">
-        <label>Règles</label>
-        <span class="hint">ex : <code>p &lt;- q,a</code> • Fait : <code>q &lt;-</code> (body vide)</span>
+    <!-- Rangée 2 :arguments | attaques -->
+    <section class="grid grid-2">
+      <div class="card">
+        <h3>Arguments</h3>
+        <div id="arguments"></div>
       </div>
-      <table class="grid-table rules-table" id="rules-table">
-        <thead><tr><th>Head</th><th>Body (virgules)</th><th></th></tr></thead>
-        <tbody id="rules-body"></tbody>
-      </table>
-      <button class="secondary" id="add-rule">+ Ajouter une règle</button>
-    </div>
 
-    <!-- PREF -->
-    <div class="field">
-      <div class="label-row">
-        <label for="pref">PREF (texte)</label>
-        <span class="hint">ex : <code>a,b &gt; c &gt; d</code> • laisse vide si aucune préférence</span>
+      <div class="card">
+        <h3>Attaques</h3>
+        <div id="attacks"></div>
       </div>
-      <input type="text" id="pref" placeholder="a > b">
-    </div>
+    </section>
 
-    <div class="row">
-      <button id="btn-run">Exécuter</button>
-      <button class="secondary" id="btn-sample">Charger l'exemple</button>
-      <button class="secondary" id="btn-clear">Effacer</button>
-      <span class="small" id="status-msg"></span>
-    </div>
-  </section>
+    <!-- Rangée 3 : graphe  -->
+      <section class="grid grid-1">
+        <div class="card">
+          <h3>Graphe des attaques</h3>
+          <div id="graph2d"></div>
 
-  <!-- APERÇU JSON (optionnel) -->
-  <section class="card">
-    <div class="row between">
-      <h3 class="section-title">Aperçu du JSON envoyé</h3>
-      <button class="secondary" id="btn-toggle-preview">Afficher</button>
-    </div>
-    <div id="preview-section" class="hidden">
-      <pre id="preview">—</pre>
-    </div>
-  </section>
+          <!-- Toolbar -->
+          <div class="graph-toolbar">
+            <button id="btnZoomIn">＋</button>
+            <button id="btnZoomOut">－</button>
+            <button id="btnFit">Ajuster</button>
+            <span class="sep"></span>
+            <button id="btnRotateL">↺</button>
+            <button id="btnRotateR">↻</button>
+            <span class="sep"></span>
+            <button id="btnRelayout">Réorganiser</button>
+          </div>
+        </div>
 
-  <!-- RÉSULTAT BACKEND (optionnel) -->
-  <section class="card">
-    <div class="row between">
-      <h3 class="section-title">Résultat (backend)</h3>
-      <button class="secondary" id="btn-toggle-result">Afficher</button>
-    </div>
-    <div id="result-section" class="hidden">
-      <pre id="out">Résultats ici…</pre>
-    </div>
-  </section>
+      </section>
 
-  <!-- RÉSUMÉ LISIBLE -->
-  <section class="card">
-    <h3 class="section-title">Résumé</h3>
-    <div id="summary"><span class="small">Lance un run pour voir les arguments et attaques.</span></div>
-  </section>
-</main>
+  </main>
 
-<script src="/web/script.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/tippy.js@6/themes/light.css">
+  <link rel="stylesheet" href="https://unpkg.com/tippy.js@6/dist/tippy.css">
+  <script src="https://unpkg.com/cytoscape@3.27.0/dist/cytoscape.min.js"></script>
+  <script src="https://unpkg.com/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+  <script src="https://unpkg.com/tippy.js@6/dist/tippy-bundle.umd.min.js"></script>
+  <script src="https://unpkg.com/cytoscape-popper@1.0.7/cytoscape-popper.js"></script>
+
+  <script src="/web/app.js"></script>
+
 </body>
 </html>

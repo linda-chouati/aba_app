@@ -9,5 +9,5 @@
     {"head": "t", "body": ["p", "c"]},
     {"head": "s", "body": ["t"]}
   ],
-  "preferences": {"a": 2, "b": 1}
+  "preferences": {"a": 1, "b": 2}
 }
