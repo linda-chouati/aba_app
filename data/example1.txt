@@ -1,0 +1,7 @@
+L: [alpha, beta, leave, stay]
+A: [alpha, beta]
+C(alpha): stay
+C(beta): leave
+[r1]: leave <- alpha
+[r2]: stay  <- beta
+PREF: alpha < beta

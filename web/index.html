@@ -4,7 +4,9 @@
   <meta charset="utf-8" />
   <title>ABA+ Framework</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="/web/style.css" />
+
+  <!-- Styles globaux -->
+  <link rel="stylesheet" href="web/style.css" />
 </head>
 <body>
   <header class="topbar">
@@ -13,6 +15,7 @@
   </header>
 
   <main class="container">
+    <!-- Panneau d'entrée -->
     <section class="panel">
       <div class="panel-header">
         <h2>Entrée (texte ou JSON)</h2>
@@ -49,50 +52,59 @@ PREF: a > b
       <div id="status"></div>
     </section>
 
-    <!-- Rangée 1 : résumé  -->
-    <section class="grid grid-1">
-      <div class="card">
-        <h3>Résumé du cadre</h3>
-        <div id="summary"></div>
-      </div>
-    </section>
-
-    <!-- Rangée 2 :arguments | attaques -->
+    <!-- Résultats -->
     <section class="grid grid-2">
+      <!-- Arguments -->
       <div class="card">
         <h3>Arguments</h3>
         <div id="arguments"></div>
       </div>
 
+      <!-- Attaques -->
       <div class="card">
         <h3>Attaques</h3>
+
+        <!-- Mode sans préférences (ou fallback) -->
         <div id="attacks"></div>
+
+        <!-- Mode avec préférences -->
+        <div id="attacksTable" style="display:none; margin-top:1rem;">
+          <table class="table-lite">
+            <thead>
+              <tr>
+                <th>Type</th>
+                <th>Attaquant</th>
+                <th></th>
+                <th>Cible</th>
+              </tr>
+            </thead>
+            <tbody id="attacksTbody"></tbody>
+          </table>
+        </div>
       </div>
     </section>
 
-    <!-- Rangée 3 : graphe  -->
-      <section class="grid grid-1">
-        <div class="card">
-          <h3>Graphe des attaques</h3>
-          <div id="graph2d"></div>
+    <!-- Graphe -->
+    <section class="grid grid-1">
+      <div class="card">
+        <h3>Graphe des attaques</h3>
+        <div id="graph2d"></div>
 
-          <!-- Toolbar -->
-          <div class="graph-toolbar">
-            <button id="btnZoomIn">＋</button>
-            <button id="btnZoomOut">－</button>
-            <button id="btnFit">Ajuster</button>
-            <span class="sep"></span>
-            <button id="btnRotateL">↺</button>
-            <button id="btnRotateR">↻</button>
-            <span class="sep"></span>
-            <button id="btnRelayout">Réorganiser</button>
-          </div>
+        <div class="graph-toolbar">
+          <button id="btnZoomIn">＋</button>
+          <button id="btnZoomOut">－</button>
+          <button id="btnFit">Ajuster</button>
+          <span class="sep"></span>
+          <button id="btnRotateL">↺</button>
+          <button id="btnRotateR">↻</button>
+          <span class="sep"></span>
+          <button id="btnRelayout">Réorganiser</button>
         </div>
-
-      </section>
-
+      </div>
+    </section>
   </main>
 
+  <!-- libs -->
   <link rel="stylesheet" href="https://unpkg.com/tippy.js@6/themes/light.css">
   <link rel="stylesheet" href="https://unpkg.com/tippy.js@6/dist/tippy.css">
   <script src="https://unpkg.com/cytoscape@3.27.0/dist/cytoscape.min.js"></script>
@@ -100,7 +112,7 @@ PREF: a > b
   <script src="https://unpkg.com/tippy.js@6/dist/tippy-bundle.umd.min.js"></script>
   <script src="https://unpkg.com/cytoscape-popper@1.0.7/cytoscape-popper.js"></script>
 
-  <script src="/web/app.js"></script>
-
+  <!-- le JS -->
+  <script src="web/app.js"></script>
 </body>
 </html>

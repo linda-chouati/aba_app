@@ -1,34 +1,44 @@
-# src/aba_core.py
 from itertools import product
-from .utils import parse_preferences
+from src.utils import parse_preferences
 
 class ABA:
+    """
+    Cadre ABA minimal :
+      - literals : ensemble de littéraux
+      - assumptions : sous-ensemble de literals
+      - contraries : dict assumption -> literal
+      - rules : liste de dict {"head": str, "body": [str,...]}
+      - preferences : dict optionnel assumption -> rang (0 = meilleur)
+    """
+
     def __init__(self):
-        # composant necessaire a le def du framework aba 
-        self.literals = set()       # L : ensemble des littéraux
-        self.assumptions = set()    # A : ensemble des hypothèses (assumptions)
-        self.contraries = {}        # les contraires 
-        self.rules = []           # R : règles de la forme avec head : body 
-        self.preferences = {}       # préférences entre assumptions  pour aba+
+        self.literals = set()
+        self.assumptions = set()
+        self.contraries = {}
+        self.rules = []
+        self.preferences = {}
 
-    # ---------- parsing - check ----------
+    # ---------- construction ----------
 
-    def parse_from_json(self, data):
-        """ va lire le cadre aba d un fichier json pour recup les données du framework """
-        self.literals = set(data.get("literals", []))
-        self.assumptions = set(data.get("assumptions", []))
-        self.contraries = dict(data.get("contraries", {}))
-        self.rules = list(data.get("rules", []))
+    @classmethod
+    def from_dict(cls, data):
+        obj = cls()
+        obj.literals = set(data.get("literals", []))
+        obj.assumptions = set(data.get("assumptions", []))
+        obj.contraries = dict(data.get("contraries", {}))
+        obj.rules = list(data.get("rules", []))
+
         pref = data.get("preferences", {})
         if isinstance(pref, str):
-            self.preferences = parse_preferences(pref)
+            obj.preferences = parse_preferences(pref)
         elif isinstance(pref, dict):
-            self.preferences = dict(pref)
+            obj.preferences = dict(pref)
         else:
-            self.preferences = {}
+            obj.preferences = {}
+        obj.validate()
+        return obj
 
     def validate(self):
-        """ juste pour vérifier que le framework est bien definit qu on a recup dans le fichier json"""
         if not self.literals:
             raise ValueError("literals manquant")
         if not self.assumptions:
@@ -53,43 +63,42 @@ class ABA:
                 if x not in self.literals:
                     raise ValueError(f"body invalide: {x}")
 
-    # ---------- arguments ----------
+    # ---------- génération d'arguments ----------
 
     def derive_arguments(self):
         """
-        premiere etape essentielle trouver tous les arguments dérivable dans le cadre aba
-        -> un argument est un couple (ensemble d asumption, conclusion)
+        Génère tous les arguments minimaux possibles.
+        Un argument = {"id": int, "assumptions": frozenset(...), "conclusion": literal}
         """
-        supports = {l: set() for l in self.literals} # on garde pour chaque litteral, la liste des support donc des assumption qui le prouvent
+        supports = {l: set() for l in self.literals}
 
-        # une assumption permet de conclire elle meme : a |- a 
+        # une assumption prouve elle-même
         for a in self.assumptions:
             supports[a].add(frozenset([a]))
 
-        # poour les regles sans prémises, on conclut donc son head sans assumption 
+        # règles sans prémisses
         for r in self.rules:
             if not r.get("body", []):
                 supports[r["head"]].add(frozenset())
 
-        def keep_minimal(sets_):
-            # juste pour etre sur qu on garde les support minimaux (pas de doublons)
+        # fermeture par règles jusqu'à stabilité
+        def minimalize(sets_):
             lst = list(sets_)
-            out = []
+            keep = []
             n = len(lst)
             for i in range(n):
                 s = lst[i]
                 ok = True
                 for j in range(n):
-                    if i == j:
+                    if i == j: 
                         continue
-                    if lst[j] < s: # si un support plus petit existe on peut supp s 
+                    if lst[j] < s:  # strict subset
                         ok = False
                         break
                 if ok:
-                    out.append(s)
-            return set(out)
+                    keep.append(s)
+            return set(keep)
 
-        # on apllique la fermeture par application de reles -> proprogation jusqu a stabilité 
         changed = True
         while changed:
             changed = False
@@ -98,47 +107,36 @@ class ABA:
                 body = r.get("body", [])
                 if not body:
                     continue
-
-                # on ne peut pas appliquer la regles si toutes le prémises sont deja dérivables 
-                all_ok = True
+                # il faut que toutes les prémisses soient déjà prouvables
                 for b in body:
                     if len(supports[b]) == 0:
-                        all_ok = False
                         break
-                if not all_ok:
-                    continue
-
-                # on constuit donc des nouveaux support pour le head
-                pools = []
-                for b in body:
-                    pools.append(list(supports[b]))
-                for combo in product(*pools):
-                    uni = frozenset()
-                    for s in combo:
-                        uni = uni.union(s)
-                    if uni not in supports[head]:
-                        supports[head].add(uni)
+                else:
+                    # composer les supports
+                    pools = [list(supports[b]) for b in body]
+                    for combo in product(*pools):
+                        acc = frozenset().union(*combo)
+                        if acc not in supports[head]:
+                            supports[head].add(acc)
+                            changed = True
+                    # garder les supports minimaux
+                    new_min = minimalize(supports[head])
+                    if new_min != supports[head]:
+                        supports[head] = new_min
                         changed = True
 
-                # on garde uniquement les support munimaux 
-                new_min = keep_minimal(supports[head])
-                if new_min != supports[head]:
-                    supports[head] = new_min
-                    changed = True
-
-        # on convertir ca en liste d arguments 
+        # conversion en liste
         args = []
-        idx = 0
-        for concl, sets_ass in supports.items():
-            for S in sets_ass:
-                args.append({"id": idx, "assumptions": S, "conclusion": concl})
-                idx += 1
+        k = 0
+        for concl, Sset in supports.items():
+            for S in Sset:
+                args.append({"id": k, "assumptions": S, "conclusion": concl})
+                k += 1
         return args
 
-    # ---------- export du resultats ----------
+    # ---------- export ----------
 
-    def export_results(self, args, atks):
-        """on stocke ses resultats en json (arguments + attaques)"""
+    def export_results(self, args, attacks):
         out_args = []
         for a in args:
             out_args.append({
@@ -153,6 +151,5 @@ class ABA:
             "rules": self.rules,
             "preferences": self.preferences,
             "arguments": out_args,
-            "attacks": atks
+            "attacks": attacks
         }
-    
