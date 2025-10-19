@@ -86,7 +86,6 @@ def compute_attacks_sets(aba, args):
 
     # on va considérer toutes les coalitions "utiles" — ici : toutes les subsets des assumptions
     # (pour petits A, ok; si A large -> à optimiser)
-    from itertools import chain, combinations
     def all_subsets(s):
         lst = list(s)
         for r in range(len(lst)+1):

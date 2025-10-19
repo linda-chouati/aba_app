@@ -414,5 +414,5 @@ function renderAll(view) {
 // Bouton "Calculer"
 // =============================
 elBtnCalc.addEventListener('click', () => {
-  runAba().catch(e => setStatus(`❌ ${e?.message ?? e}`));
+  runAba().catch(e => setStatus(` ${e?.message ?? e}`));
 });
