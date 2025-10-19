@@ -36,8 +36,8 @@ Une petite application **ABA / ABA+** qui :
 │   ├── aba_transform.py
 │   ├── utils.py         # parse_any, parse_preferences, etc.
 │   └── ...
-├── tests/               # Pytest (exemples du cours, régressions)
-└── web/                 # Front minimal
+├── tests/               # Pytest (exemples du cours)
+└── web/                 # Front
     ├── index.html
     ├── app.js
     └── style.css
@@ -50,14 +50,9 @@ Une petite application **ABA / ABA+** qui :
 - **Python 3.11+** (3.12 recommandé)
 - **pip** et (optionnel) **virtualenv**
 
-Dépendances Python minimales (déjà listées) :
+Dépendances Python minimales (déjà listées) dans requirement.txt
 
-```
-fastapi==0.115.0
-uvicorn==0.30.6
-```
-
-> Pour exécuter les tests : `pytest` (ajoutez `pytest` à `requirements.txt` si besoin).
+> Pour exécuter les tests : `pytest`
 
 ---
 
@@ -75,14 +70,6 @@ source venv/bin/activate   # Windows: venv\Scripts\activate
 # 3) Installer les dépendances
 pip install -r requirements.txt
 ```
-
-> Si vous n’avez pas de `requirements.txt`, créez-le avec :
->
-> ```
-> fastapi==0.115.0
-> uvicorn==0.30.6
-> pytest==7.4.4
-> ```
 
 ---
 

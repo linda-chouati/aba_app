@@ -143,17 +143,17 @@ async function runAba() {
 
     if (!resp.ok) {
       const txt = await resp.text().catch(()=> '');
-      setStatus(`❌ Erreur ${resp.status}: ${txt || resp.statusText}`);
+      setStatus(`Erreur ${resp.status}: ${txt || resp.statusText}`);
       return;
     }
 
     const out = await resp.json();
-    setStatus('✅ Terminé');
+    setStatus('Terminé');
 
     const view = buildViewModel(out);
     renderAll(view);
   } catch (e) {
-    setStatus(`❌ Erreur réseau : ${e?.message ?? e}`);
+    setStatus(`Erreur réseau : ${e?.message ?? e}`);
   }
 }
 
